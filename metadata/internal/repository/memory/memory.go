@@ -1,0 +1,34 @@
+package memory
+
+import (
+	"context"
+	"movieapp/metadata/internal/repository"
+	"movieapp/metadata/pkg/model"
+	"sync"
+)
+
+type Repository struct {
+	sync.RWMutex
+	data map[string]*model.Metadata
+}
+
+func New() *Repository {
+	return &Repository{data: map[string]*model.Metadata{}}
+}
+
+func (r *Repository) Get(_ context.Context, id string) (*model.Metadata, error) {
+	r.Lock()
+	defer r.Unlock()
+	data, ok := r.data[id]
+	if !ok {
+		return nil, repository.ErrNotFound
+	}
+	return data, nil
+}
+
+func (r *Repository) Put(_ context.Context, id string, metadata *model.Metadata) error {
+	r.Lock()
+	defer r.Unlock()
+	r.data[id] = metadata
+	return nil
+}
